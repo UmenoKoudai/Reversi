@@ -6,6 +6,7 @@ using UnityEngine.UI;
 public class Reversi : MonoBehaviour
 {
     [SerializeField] GameObject _cellPrefab;
+    [SerializeField] GameObject _piecePrefab;
     [SerializeField] int _row;
     [SerializeField]int _column;
     GameObject[,] _cells;
@@ -18,6 +19,18 @@ public class Reversi : MonoBehaviour
             for(int c = 0; c < _column; c++)
             {
                 GameObject cell =  Instantiate(_cellPrefab, transform);
+                if (r == 3 && c == 3 || r == 4 && c == 4)
+                {
+                    GameObject piece = Instantiate(_piecePrefab, cell.transform);
+                    piece.transform.position = new Vector3(-13, 16, -2);
+                    piece.GetComponent<Piece>().NowColor = Piece.PieceColor.White;
+                }
+                if(r == 3 && c == 4 || r == 4 && c == 3)
+                {
+                    GameObject piece = Instantiate(_piecePrefab, cell.transform);
+                    piece.transform.position = new Vector3(-13, 16, -2);
+                    piece.GetComponent<Piece>().NowColor = Piece.PieceColor.Black;
+                }
                 cell.name = $"{r} {c}";
                 _cells[r, c] = cell;
             }
