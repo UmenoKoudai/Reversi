@@ -1,28 +1,21 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.UI;
+using static IColors;
 
 public class Piece : MonoBehaviour
 {
-    PieceColor _nowColor = PieceColor.Black;
+    Colors _state = Colors.Black;
 
-    public PieceColor NowColor { get => _nowColor; set => _nowColor = value; }
+    public Colors PieceColor { get => _state; set => _state = value; }
 
     void Update()
     {
-        if(_nowColor == PieceColor.White)
+        if(_state == Colors.White)
         {
             transform.localRotation = Quaternion.Euler(90, 0, 0);
         }
-        if(_nowColor == PieceColor.Black)
+        if(_state == Colors.Black)
         {
             transform.localRotation = Quaternion.Euler(-90, 0, 0);
         }
-    }
-    public enum PieceColor
-    {
-        White,
-        Black,
     }
 }

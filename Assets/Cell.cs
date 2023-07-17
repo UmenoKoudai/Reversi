@@ -1,18 +1,9 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.UI;
+using static IColors;
 
 public class Cell : MonoBehaviour
 {
-    CellState _state = CellState.None;
+    Colors _state = Colors.None;
 
-    public CellState State { get => _state; set => _state = value; }
-
-    public enum CellState
-    {
-        None,
-        White,
-        Black,
-    }
+    public Colors CellColor { get => _state; set => _state = value; }
 }
