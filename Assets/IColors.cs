@@ -1,4 +1,4 @@
-public interface IColors
+﻿public interface IColors
 {
     public enum Colors
     {
