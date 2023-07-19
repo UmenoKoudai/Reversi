@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
-using System.Linq;
 using static IColors;
 
 public class Reversi : MonoBehaviour, IPointerClickHandler
@@ -16,11 +15,16 @@ public class Reversi : MonoBehaviour, IPointerClickHandler
     [SerializeField] int _row;
     /// <summary>盤面のサイズ(横)</summary>
     [SerializeField] int _column;
+    /// <summary>ゲームマネージャー</summary>
+    [SerializeField]GameManager _gameManager;
     /// <summary>盤面の情報を格納する配列</summary>
     Cell[,] _cells;
     /// <summary>フィールドの駒情報を格納する配列</summary>
     GameObject[,] _pieces;
     bool _myTurn = true;
+
+    public int Row { get { return _row; } }
+    public int Column { get { return _column;} }
 
     void Start()
     {
@@ -37,6 +41,7 @@ public class Reversi : MonoBehaviour, IPointerClickHandler
                 _cells[r, c] = cell.GetComponent<Cell>();
                 if (r == 3 && c == 3 || r == 4 && c == 4)
                 {
+                    _gameManager.WhiteCount++;
                     GameObject piece = Instantiate(_piecePrefab, cell.transform);
                     piece.transform.localRotation = Quaternion.Euler(90, 0, 0);
                     _cells[r, c].CellColor = Colors.White;
@@ -44,6 +49,7 @@ public class Reversi : MonoBehaviour, IPointerClickHandler
                 }
                 if(r == 3 && c == 4 || r == 4 && c == 3)
                 {
+                    _gameManager.BlackCount++;
                     GameObject piece = Instantiate(_piecePrefab, cell.transform);
                     piece.transform.localRotation = Quaternion.Euler(-90, 0, 0);
                     _cells[r, c].CellColor = Colors.Black;
@@ -57,10 +63,10 @@ public class Reversi : MonoBehaviour, IPointerClickHandler
     public void OnPointerClick(PointerEventData eventData)
     {
         Cell currentCell = eventData.pointerCurrentRaycast.gameObject.GetComponent<Cell>();
-        if(CheckCell(currentCell, out int r, out int c))
+        if(CheckCell(currentCell, out int r, out int c) && _myTurn)
         {
             List<KeyValuePair<int, int>> piece = new List<KeyValuePair<int, int>>();
-            if (_myTurn && _cells[r, c].BlackCost > 0)
+            if (_cells[r, c].BlackCost > 0)
             {
                 PieceCreate(r, c, Colors.Black);
                 ReversCell(ReversCheck(ref piece, Colors.Black, r, c, 0, 1), piece);//右
@@ -71,9 +77,9 @@ public class Reversi : MonoBehaviour, IPointerClickHandler
                 ReversCell(ReversCheck(ref piece, Colors.Black, r, c, -1, -1), piece);//左上
                 ReversCell(ReversCheck(ref piece, Colors.Black, r, c, -1, 1), piece);//右上
                 ReversCell(ReversCheck(ref piece, Colors.Black, r, c, 1, -1), piece);//左下
+                CostCheck();
+                StartCoroutine(NextTurn());
             }
-            CostCheck();
-            StartCoroutine(NextTurn());
         }
     }
 
@@ -194,10 +200,12 @@ public class Reversi : MonoBehaviour, IPointerClickHandler
         GameObject piece = Instantiate(_piecePrefab, _cells[row, column].transform);
         if (nowColor == Colors.White)
         {
+            _gameManager.WhiteCount++;
             piece.transform.localRotation = Quaternion.Euler(90, 0, 0);
         }
         else if(nowColor == Colors.Black)
         {
+            _gameManager.BlackCount++;
             piece.transform.localRotation = Quaternion.Euler(-90, 0, 0);
         }
         _cells[row, column].CellColor = nowColor;
@@ -271,10 +279,14 @@ public class Reversi : MonoBehaviour, IPointerClickHandler
                 _cells[p.Key, p.Value].CellColor = reversColor;
                 if (reversColor == Colors.White)
                 {
+                    _gameManager.BlackCount--;
+                    _gameManager.WhiteCount++;
                     _pieces[p.Key, p.Value].transform.DORotate(new Vector3(1, 0, 0) * 90f, 1f);
                 }
                 else if(reversColor == Colors.Black)
                 {
+                    _gameManager.WhiteCount--;
+                    _gameManager.BlackCount++;
                     _pieces[p.Key, p.Value].transform.DORotate(new Vector3(1, 0, 0) * -90f, 1f);
                 }
             }
