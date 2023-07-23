@@ -1,4 +1,5 @@
 ﻿using DG.Tweening;
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.EventSystems;
@@ -17,11 +18,23 @@ public class Reversi : MonoBehaviour, IPointerClickHandler
     [SerializeField] int _column;
     /// <summary>ゲームマネージャー</summary>
     [SerializeField]GameManager _gameManager;
+    [SerializeField] Skip _skip;
     /// <summary>盤面の情報を格納する配列</summary>
     Cell[,] _cells;
     /// <summary>フィールドの駒情報を格納する配列</summary>
     GameObject[,] _pieces;
+    Position[] direction = {
+        new Position(1,0),
+        new Position(-1,0),
+        new Position(0,1),
+        new Position(0,-1),
+        new Position(1,1),
+        new Position(-1,-1),
+        new Position(1,-1),
+        new Position(-1,1),
+    };
     bool _myTurn = true;
+
 
     public int Row { get { return _row; } }
     public int Column { get { return _column;} }
@@ -69,14 +82,10 @@ public class Reversi : MonoBehaviour, IPointerClickHandler
             if (_cells[r, c].BlackCost > 0)
             {
                 PieceCreate(r, c, Colors.Black);
-                ReversCell(ReversCheck(ref piece, Colors.Black, r, c, 0, 1), piece);//右
-                ReversCell(ReversCheck(ref piece, Colors.Black, r, c, 0, -1), piece);//左
-                ReversCell(ReversCheck(ref piece, Colors.Black, r, c, 1, 0), piece);//下
-                ReversCell(ReversCheck(ref piece, Colors.Black, r, c, -1, 0), piece);//上
-                ReversCell(ReversCheck(ref piece, Colors.Black, r, c, 1, 1), piece);//右下
-                ReversCell(ReversCheck(ref piece, Colors.Black, r, c, -1, -1), piece);//左上
-                ReversCell(ReversCheck(ref piece, Colors.Black, r, c, -1, 1), piece);//右上
-                ReversCell(ReversCheck(ref piece, Colors.Black, r, c, 1, -1), piece);//左下
+                foreach(var dir in direction)
+                {
+                    ReversCell(ReversCheck(ref piece, Colors.Black, r, c, dir.x, dir.y), piece);
+                }
                 CostCheck();
                 StartCoroutine(NextTurn());
             }
@@ -107,15 +116,19 @@ public class Reversi : MonoBehaviour, IPointerClickHandler
                 }
             }
         }
-        PieceCreate(r, c, Colors.White);
-        ReversCell(ReversCheck(ref piece, Colors.White, r, c, 0, 1), piece);//右
-        ReversCell(ReversCheck(ref piece, Colors.White, r, c, 0, -1), piece);//左
-        ReversCell(ReversCheck(ref piece, Colors.White, r, c, 1, 0), piece);//下
-        ReversCell(ReversCheck(ref piece, Colors.White, r, c, -1, 0), piece);//上
-        ReversCell(ReversCheck(ref piece, Colors.White, r, c, 1, 1), piece);//右下
-        ReversCell(ReversCheck(ref piece, Colors.White, r, c, -1, -1), piece);//左上
-        ReversCell(ReversCheck(ref piece, Colors.White, r, c, -1, 1), piece);//右上
-        ReversCell(ReversCheck(ref piece, Colors.White, r, c, 1, -1), piece);//左下
+        if (max == 0)
+        {
+            //StartCoroutine(_skip.Play(Colors.White, _myTurn));
+            _myTurn = !_myTurn;
+        }
+        else
+        {
+            PieceCreate(r, c, Colors.White);
+            foreach (var dir in direction)
+            {
+                ReversCell(ReversCheck(ref piece, Colors.White, r, c, dir.x, dir.y), piece);
+            }
+        }
     }
     void CostCheck()
     {
@@ -127,22 +140,14 @@ public class Reversi : MonoBehaviour, IPointerClickHandler
                 {
                     _cells[r, c].WhiteCost = 0;
                     _cells[r, c].BlackCost = 0;
-                    CostCount(r, c, 0, 1, Colors.Black);
-                    CostCount(r, c, 0, -1, Colors.Black);
-                    CostCount(r, c, 1, 0, Colors.Black);
-                    CostCount(r, c, -1, 0, Colors.Black);
-                    CostCount(r, c, 1, 1, Colors.Black);
-                    CostCount(r, c, -1, -1, Colors.Black);
-                    CostCount(r, c, -1, 1, Colors.Black);
-                    CostCount(r, c, 1, -1, Colors.Black);
-                    CostCount(r, c, 0, 1, Colors.White);
-                    CostCount(r, c, 0, -1, Colors.White);
-                    CostCount(r, c, 1, 0, Colors.White);
-                    CostCount(r, c, -1, 0, Colors.White);
-                    CostCount(r, c, 1, 1, Colors.White);
-                    CostCount(r, c, -1, -1, Colors.White);
-                    CostCount(r, c, -1, 1, Colors.White);
-                    CostCount(r, c, 1, -1, Colors.White);
+                    foreach(Colors color in Enum.GetValues(typeof(Colors)))
+                    {
+                        if (color == Colors.None) continue;
+                        foreach(var dir in direction)
+                        {
+                            CostCount(r, c, dir.x, dir.y, color);
+                        }
+                    }
                 }
             }
         }
