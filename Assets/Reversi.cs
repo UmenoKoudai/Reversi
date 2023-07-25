@@ -1,5 +1,6 @@
 ﻿using DG.Tweening;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.EventSystems;
@@ -18,11 +19,13 @@ public class Reversi : MonoBehaviour, IPointerClickHandler
     [SerializeField] int _column;
     /// <summary>ゲームマネージャー</summary>
     [SerializeField]GameManager _gameManager;
+    /// <summary>スキップ演出をするオブジェクト</summary>
     [SerializeField] Skip _skip;
     /// <summary>盤面の情報を格納する配列</summary>
     Cell[,] _cells;
     /// <summary>フィールドの駒情報を格納する配列</summary>
     GameObject[,] _pieces;
+    /// <summary>8方向を調べるための数字</summary>
     Position[] direction = {
         new Position(1,0),
         new Position(-1,0),
@@ -33,6 +36,7 @@ public class Reversi : MonoBehaviour, IPointerClickHandler
         new Position(1,-1),
         new Position(-1,1),
     };
+    /// <summary>現在のターン情報を管理するフラグ</summary>
     bool _myTurn = true;
 
 
@@ -84,20 +88,22 @@ public class Reversi : MonoBehaviour, IPointerClickHandler
                 PieceCreate(r, c, Colors.Black);
                 foreach(var dir in direction)
                 {
-                    ReversCell(ReversCheck(ref piece, Colors.Black, r, c, dir.x, dir.y), piece);
+                    StartCoroutine(Revers(ReversCheck(ref piece, Colors.Black, r, c, dir.x, dir.y), piece));
                 }
-                CostCheck();
                 StartCoroutine(NextTurn());
             }
         }
     }
 
-    System.Collections.IEnumerator NextTurn()
+
+    /// <summary>時間を送らせてAIのターンを実行する</summary>
+    IEnumerator NextTurn()
     {
         yield return new WaitForSeconds(2f);
         EnemyTurn();
-        CostCheck();
     }
+
+    /// <summary>AIのターンを行う</summary>
     void EnemyTurn()
     {
         List<KeyValuePair<int, int>> piece = new List<KeyValuePair<int, int>>();
@@ -126,10 +132,12 @@ public class Reversi : MonoBehaviour, IPointerClickHandler
             PieceCreate(r, c, Colors.White);
             foreach (var dir in direction)
             {
-                ReversCell(ReversCheck(ref piece, Colors.White, r, c, dir.x, dir.y), piece);
+                StartCoroutine(Revers(ReversCheck(ref piece, Colors.White, r, c, dir.x, dir.y), piece));
             }
         }
     }
+
+    /// <summary>駒を置いた場合ひっくり返す事ができる枚数を計算</summary>
     void CostCheck()
     {
         for(int r = 0; r < _row; r++)
@@ -153,6 +161,12 @@ public class Reversi : MonoBehaviour, IPointerClickHandler
         }
     }
 
+    /// <summary>実際に枚数を計算するメソッド</summary>
+    /// <param name="row">計算するマス(縦)</param>
+    /// <param name="column">計算するマス(横)</param>
+    /// <param name="rowPlus">上下に移動する</param>
+    /// <param name="columnPlus">左右に移動する</param>
+    /// <param name="searchColor">どの色の駒を計算するか</param>
     void CostCount(int row, int column, int rowPlus, int columnPlus, Colors searchColor)
     {
         int currentRow = row;
@@ -275,7 +289,7 @@ public class Reversi : MonoBehaviour, IPointerClickHandler
     /// <summary>挟まれた駒をリバースする</summary>
     /// <param name="reversColor">何色にリバースするか</param>
     /// <param name="pieces">リバースする駒の位置</param>
-    void ReversCell(Colors reversColor, List<KeyValuePair<int, int>> pieces)
+    IEnumerator Revers(Colors reversColor, List<KeyValuePair<int, int>> pieces)
     {
         if (reversColor != Colors.None)
         {
@@ -288,13 +302,15 @@ public class Reversi : MonoBehaviour, IPointerClickHandler
                     _gameManager.WhiteCount++;
                     _pieces[p.Key, p.Value].transform.DORotate(new Vector3(1, 0, 0) * 90f, 1f);
                 }
-                else if(reversColor == Colors.Black)
+                else if (reversColor == Colors.Black)
                 {
                     _gameManager.WhiteCount--;
                     _gameManager.BlackCount++;
                     _pieces[p.Key, p.Value].transform.DORotate(new Vector3(1, 0, 0) * -90f, 1f);
                 }
+                yield return new WaitForSeconds(0.5f);
             }
+            CostCheck();
         }
     }
 
