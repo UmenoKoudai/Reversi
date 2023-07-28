@@ -1,19 +1,22 @@
+using DG.Tweening;
 using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
-using DG.Tweening;
-using static IColors;
 
 public class Skip : MonoBehaviour
 {
     [SerializeField] GameObject _skip;
     [SerializeField] Transform _startPosition;
     [SerializeField] Transform _endPosition;
+    [SerializeField] Reversi _reversi;
 
-     public IEnumerator Play(bool turn)
+     public IEnumerator Play()
     {
+        bool nowTurn = _reversi.Turn;
         _skip.SetActive(true);
-        yield return null;
+        _skip.transform.DOMoveX(_endPosition.position.x, 1f).OnComplete(() => _skip.GetComponent<Text>().DOFade(0, 1f));
+        yield return new WaitForSeconds(1f);
+        _skip.transform.position = _startPosition.position;
+        _reversi.Turn = !nowTurn;
     }
 }

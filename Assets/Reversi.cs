@@ -37,11 +37,19 @@ public class Reversi : MonoBehaviour, IPointerClickHandler
         new Position(-1,1),
     };
     /// <summary>現在のターン情報を管理するフラグ</summary>
-    bool _myTurn = true;
+    public bool _myTurn = true;
 
 
     public int Row { get { return _row; } }
     public int Column { get { return _column;} }
+    public bool Turn
+    {
+        get => _myTurn;
+        set
+        {
+            _myTurn = value;
+        }
+    }
 
     void Start()
     {
@@ -94,15 +102,23 @@ public class Reversi : MonoBehaviour, IPointerClickHandler
             }
         }
     }
-
-
+    void PlayerCheck()
+    {
+        foreach(var cell in _cells)
+        {
+            if (cell.BlackCost > 0)
+            {
+                return;
+            }
+        }
+        StartCoroutine(_skip.Play());
+    }
     /// <summary>時間を送らせてAIのターンを実行する</summary>
     IEnumerator NextTurn()
     {
         yield return new WaitForSeconds(2f);
         EnemyTurn();
     }
-
     /// <summary>AIのターンを行う</summary>
     void EnemyTurn()
     {
@@ -124,7 +140,7 @@ public class Reversi : MonoBehaviour, IPointerClickHandler
         }
         if (max == 0)
         {
-            //StartCoroutine(_skip.Play(Colors.White, _myTurn));
+            StartCoroutine(_skip.Play());
             _myTurn = !_myTurn;
         }
         else
@@ -135,8 +151,8 @@ public class Reversi : MonoBehaviour, IPointerClickHandler
                 StartCoroutine(Revers(ReversCheck(ref piece, Colors.White, r, c, dir.x, dir.y), piece));
             }
         }
+        PlayerCheck();
     }
-
     /// <summary>駒を置いた場合ひっくり返す事ができる枚数を計算</summary>
     void CostCheck()
     {
@@ -160,7 +176,6 @@ public class Reversi : MonoBehaviour, IPointerClickHandler
             }
         }
     }
-
     /// <summary>実際に枚数を計算するメソッド</summary>
     /// <param name="row">計算するマス(縦)</param>
     /// <param name="column">計算するマス(横)</param>
@@ -208,7 +223,6 @@ public class Reversi : MonoBehaviour, IPointerClickHandler
             }
         }
     }
-
     /// <summary>クリックした所に駒を置く</summary>
     /// <param name="row">駒を置く位置(縦)</param>
     /// <param name="column">駒を置く位置(横)</param>
@@ -230,7 +244,6 @@ public class Reversi : MonoBehaviour, IPointerClickHandler
         _cells[row, column].CellColor = nowColor;
         _pieces[row, column] = piece;
     }
-
     /// <summary>上下左右斜めを見てリバース出来るかチェックする</summary>
     /// <param name="pieces">リバース出来る駒の位置</param>
     /// <param name="nowColor">今置いた駒の色</param>
@@ -285,7 +298,6 @@ public class Reversi : MonoBehaviour, IPointerClickHandler
         }
         return changeColor;
     }
-
     /// <summary>挟まれた駒をリバースする</summary>
     /// <param name="reversColor">何色にリバースするか</param>
     /// <param name="pieces">リバースする駒の位置</param>
@@ -313,7 +325,6 @@ public class Reversi : MonoBehaviour, IPointerClickHandler
             CostCheck();
         }
     }
-
     /// <summary>どこのセルをクリックしたかをチェックする</summary>
     /// <param name="currentCell">クリックしたセル</param>
     /// <param name="row">縦の位置情報を返す</param>
