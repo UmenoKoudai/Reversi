@@ -13,7 +13,7 @@ public class Skip : MonoBehaviour
      public IEnumerator Play()
     {
         bool nowTurn = _reversi.Turn;
-        _skip.SetActive(true);
+        _skip.GetComponent<Text>().DOFade(1, 0.5f);
         _skip.transform.DOMoveX(_endPosition.position.x, 1f).OnComplete(() => _skip.GetComponent<Text>().DOFade(0, 1f));
         yield return new WaitForSeconds(1f);
         _skip.transform.position = _startPosition.position;
