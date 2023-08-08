@@ -23,6 +23,7 @@ public class Reversi : MonoBehaviour, IPointerClickHandler
     [SerializeField] Skip _skip;
     /// <summary>盤面の情報を格納する配列</summary>
     Cell[,] _cells;
+    List<Cell[,]> _gameRecode = new List<Cell[,]>();
     /// <summary>フィールドの駒情報を格納する配列</summary>
     GameObject[,] _pieces;
     /// <summary>8方向を調べるための数字</summary>
@@ -99,6 +100,7 @@ public class Reversi : MonoBehaviour, IPointerClickHandler
                     StartCoroutine(Revers(ReversCheck(ref piece, Colors.Black, r, c, dir.x, dir.y), piece));
                 }
                 StartCoroutine(NextTurn());
+                _gameRecode.Add(_cells);
             }
         }
     }
@@ -152,6 +154,7 @@ public class Reversi : MonoBehaviour, IPointerClickHandler
             }
         }
         PlayerCheck();
+        _gameRecode.Add(_cells);
     }
     /// <summary>駒を置いた場合ひっくり返す事ができる枚数を計算</summary>
     void CostCheck()
