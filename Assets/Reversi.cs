@@ -24,6 +24,7 @@ public class Reversi : MonoBehaviour, IPointerClickHandler
     /// <summary>盤面の情報を格納する配列</summary>
     Cell[,] _cells;
     List<Cell[,]> _gameRecode = new List<Cell[,]>();
+    int _recodeIndex = 0;
     /// <summary>フィールドの駒情報を格納する配列</summary>
     GameObject[,] _pieces;
     /// <summary>8方向を調べるための数字</summary>
@@ -65,10 +66,12 @@ public class Reversi : MonoBehaviour, IPointerClickHandler
                 GameObject cell =  Instantiate(_cellPrefab, transform);
                 cell.name = $"{r} {c}";
                 _cells[r, c] = cell.GetComponent<Cell>();
+                GameObject piece = Instantiate(_piecePrefab, cell.transform);
+                piece.SetActive(false);
                 if (r == 3 && c == 3 || r == 4 && c == 4)
                 {
                     _gameManager.WhiteCount++;
-                    GameObject piece = Instantiate(_piecePrefab, cell.transform);
+                    piece.SetActive(true);
                     piece.transform.localRotation = Quaternion.Euler(90, 0, 0);
                     _cells[r, c].CellColor = Colors.White;
                     _pieces[r, c] = piece;
@@ -76,7 +79,7 @@ public class Reversi : MonoBehaviour, IPointerClickHandler
                 if(r == 3 && c == 4 || r == 4 && c == 3)
                 {
                     _gameManager.BlackCount++;
-                    GameObject piece = Instantiate(_piecePrefab, cell.transform);
+                    piece.SetActive(true);
                     piece.transform.localRotation = Quaternion.Euler(-90, 0, 0);
                     _cells[r, c].CellColor = Colors.Black;
                     _pieces[r, c] = piece;
@@ -84,6 +87,8 @@ public class Reversi : MonoBehaviour, IPointerClickHandler
             }
         }
         CostCheck();
+        _gameRecode.Add(_cells);
+        _recodeIndex = _gameRecode.Count;
     }
 
     public void OnPointerClick(PointerEventData eventData)
@@ -101,6 +106,7 @@ public class Reversi : MonoBehaviour, IPointerClickHandler
                 }
                 StartCoroutine(NextTurn());
                 _gameRecode.Add(_cells);
+                _recodeIndex = _gameRecode.Count;
             }
         }
     }
@@ -155,6 +161,7 @@ public class Reversi : MonoBehaviour, IPointerClickHandler
         }
         PlayerCheck();
         _gameRecode.Add(_cells);
+        _recodeIndex = _gameRecode.Count;
     }
     /// <summary>駒を置いた場合ひっくり返す事ができる枚数を計算</summary>
     void CostCheck()
@@ -233,15 +240,17 @@ public class Reversi : MonoBehaviour, IPointerClickHandler
     void PieceCreate(int row, int column, Colors nowColor)
     {
         _myTurn = !_myTurn;//置いたらターンを変える
-        GameObject piece = Instantiate(_piecePrefab, _cells[row, column].transform);
+        GameObject piece = _cells[row,column].transform.GetChild(3).gameObject;
         if (nowColor == Colors.White)
         {
             _gameManager.WhiteCount++;
+            piece.SetActive(true);
             piece.transform.localRotation = Quaternion.Euler(90, 0, 0);
         }
         else if(nowColor == Colors.Black)
         {
             _gameManager.BlackCount++;
+            piece.SetActive(true);
             piece.transform.localRotation = Quaternion.Euler(-90, 0, 0);
         }
         _cells[row, column].CellColor = nowColor;
@@ -349,5 +358,42 @@ public class Reversi : MonoBehaviour, IPointerClickHandler
         }
         row = 0; column = 0;
         return false;
+    }
+    public void FieldChange(int n)
+    {
+        int tmp = _recodeIndex;
+        _recodeIndex += n;
+        if (_recodeIndex > 0 && _recodeIndex < _gameRecode.Count)
+        {
+            _gameManager.WhiteCount = 0;
+            _gameManager.BlackCount = 0;
+            for (int r = 0; r < _row; r++)
+            {
+                for (int c = 0; c < _column; c++)
+                {
+                    GameObject piece = _cells[r, c].transform.GetChild(3).gameObject;
+                    if(_cells[r, c].CellColor == Colors.Black)
+                    {
+                        _gameManager.BlackCount++;
+                        piece.SetActive(true);
+                        piece.transform.localRotation = Quaternion.Euler(-90, 0, 0);
+                    }
+                    else if (_cells[r, c].CellColor == Colors.White)
+                    {
+                        _gameManager.WhiteCount++;
+                        piece.SetActive(true);
+                        piece.transform.localRotation = Quaternion.Euler(90, 0, 0);
+                    }
+                    else if (_cells[r,c].CellColor == Colors.None)
+                    {
+                        piece.SetActive(false);
+                    }
+                }
+            }
+        }
+        else
+        {
+            _recodeIndex = tmp;
+        }
     }
 }
