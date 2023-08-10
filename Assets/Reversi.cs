@@ -365,6 +365,7 @@ public class Reversi : MonoBehaviour, IPointerClickHandler
         _recodeIndex += n;
         if (_recodeIndex > 0 && _recodeIndex < _gameRecode.Count)
         {
+            var cell = _gameRecode[_recodeIndex - 1];
             _gameManager.WhiteCount = 0;
             _gameManager.BlackCount = 0;
             for (int r = 0; r < _row; r++)
@@ -372,19 +373,19 @@ public class Reversi : MonoBehaviour, IPointerClickHandler
                 for (int c = 0; c < _column; c++)
                 {
                     GameObject piece = _cells[r, c].transform.GetChild(3).gameObject;
-                    if(_cells[r, c].CellColor == Colors.Black)
+                    if(cell[r, c].CellColor == Colors.Black)
                     {
                         _gameManager.BlackCount++;
                         piece.SetActive(true);
                         piece.transform.localRotation = Quaternion.Euler(-90, 0, 0);
                     }
-                    else if (_cells[r, c].CellColor == Colors.White)
+                    else if (cell[r, c].CellColor == Colors.White)
                     {
                         _gameManager.WhiteCount++;
                         piece.SetActive(true);
                         piece.transform.localRotation = Quaternion.Euler(90, 0, 0);
                     }
-                    else if (_cells[r,c].CellColor == Colors.None)
+                    else if (cell[r,c].CellColor == Colors.None)
                     {
                         piece.SetActive(false);
                     }

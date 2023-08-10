@@ -31,4 +31,11 @@ public class Cell : MonoBehaviour
             _point.SetActive(false);
         }
     }
+
+    public Cell(Cell cell)
+    {
+        _state = cell.CellColor;
+        _blackCost = cell.BlackCost;
+        _whiteCost = cell.WhiteCost;
+    }
 }
