@@ -87,7 +87,8 @@ public class Reversi : MonoBehaviour, IPointerClickHandler
             }
         }
         CostCheck();
-        _gameRecode.Add(_cells);
+        Cell[,] recode = _cells;
+        _gameRecode.Add(recode);
         _recodeIndex = _gameRecode.Count;
     }
 
@@ -160,7 +161,8 @@ public class Reversi : MonoBehaviour, IPointerClickHandler
             }
         }
         PlayerCheck();
-        _gameRecode.Add(_cells);
+        Cell[,] recode = _cells;
+        _gameRecode.Add(recode);
         _recodeIndex = _gameRecode.Count;
     }
     /// <summary>駒を置いた場合ひっくり返す事ができる枚数を計算</summary>
