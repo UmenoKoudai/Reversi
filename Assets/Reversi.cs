@@ -68,13 +68,13 @@ public class Reversi : MonoBehaviour, IPointerClickHandler
                 _cells[r, c] = cell.GetComponent<Cell>();
                 GameObject piece = Instantiate(_piecePrefab, cell.transform);
                 piece.SetActive(false);
+                _pieces[r, c] = piece;
                 if (r == 3 && c == 3 || r == 4 && c == 4)
                 {
                     _gameManager.WhiteCount++;
                     piece.SetActive(true);
                     piece.transform.localRotation = Quaternion.Euler(90, 0, 0);
                     _cells[r, c].CellColor = Colors.White;
-                    _pieces[r, c] = piece;
                 }
                 if(r == 3 && c == 4 || r == 4 && c == 3)
                 {
@@ -82,7 +82,6 @@ public class Reversi : MonoBehaviour, IPointerClickHandler
                     piece.SetActive(true);
                     piece.transform.localRotation = Quaternion.Euler(-90, 0, 0);
                     _cells[r, c].CellColor = Colors.Black;
-                    _pieces[r, c] = piece;
                 }            
             }
         }
