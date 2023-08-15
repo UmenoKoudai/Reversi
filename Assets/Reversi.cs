@@ -241,7 +241,7 @@ public class Reversi : MonoBehaviour, IPointerClickHandler
     void PieceCreate(int row, int column, Colors nowColor)
     {
         _myTurn = !_myTurn;//置いたらターンを変える
-        GameObject piece = _cells[row,column].transform.GetChild(3).gameObject;
+        GameObject piece = _pieces[row,column].transform.GetChild(3).gameObject;
         if (nowColor == Colors.White)
         {
             _gameManager.WhiteCount++;
@@ -373,7 +373,7 @@ public class Reversi : MonoBehaviour, IPointerClickHandler
             {
                 for (int c = 0; c < _column; c++)
                 {
-                    GameObject piece = _cells[r, c].transform.GetChild(3).gameObject;
+                    GameObject piece = _pieces[r, c].transform.GetChild(3).gameObject;
                     if(cell[r, c].CellColor == Colors.Black)
                     {
                         _gameManager.BlackCount++;

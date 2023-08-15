@@ -2,7 +2,7 @@
 using UnityEngine.UI;
 using static IColors;
 
-public struct Cell
+class Cell : MonoBehaviour
 {
     [SerializeField] Text _blackCostText;
     [SerializeField] Text _whiteCostText;
