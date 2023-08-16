@@ -86,9 +86,7 @@ public class Reversi : MonoBehaviour, IPointerClickHandler
             }
         }
         CostCheck();
-        Cell[,] recode = _cells;
-        _gameRecode.Add(recode);
-        _recodeIndex = _gameRecode.Count;
+        RecodeSave();
     }
 
     public void OnPointerClick(PointerEventData eventData)
@@ -105,8 +103,7 @@ public class Reversi : MonoBehaviour, IPointerClickHandler
                     StartCoroutine(Revers(ReversCheck(ref piece, Colors.Black, r, c, dir.x, dir.y), piece));
                 }
                 StartCoroutine(NextTurn());
-                _gameRecode.Add(_cells);
-                _recodeIndex = _gameRecode.Count;
+                RecodeSave();
             }
         }
     }
@@ -160,9 +157,7 @@ public class Reversi : MonoBehaviour, IPointerClickHandler
             }
         }
         PlayerCheck();
-        Cell[,] recode = _cells;
-        _gameRecode.Add(recode);
-        _recodeIndex = _gameRecode.Count;
+        RecodeSave();
     }
     /// <summary>駒を置いた場合ひっくり返す事ができる枚数を計算</summary>
     void CostCheck()
@@ -186,6 +181,21 @@ public class Reversi : MonoBehaviour, IPointerClickHandler
                 }
             }
         }
+    }
+
+    void RecodeSave()
+    {
+        Cell[,] recode = new Cell[_row, _column];
+        for (int r = 0; r < _row; r++)
+        {
+            for (int c = 0; c < _column; c++)
+            {
+                Cell currentCell = _cells[r, c];
+                recode[r, c] = new Cell(currentCell.CellColor, currentCell.BlackCost, currentCell.WhiteCost);
+            }
+        }
+        _gameRecode.Add(recode);
+        _recodeIndex = _gameRecode.Count;
     }
     /// <summary>実際に枚数を計算するメソッド</summary>
     /// <param name="row">計算するマス(縦)</param>
@@ -241,7 +251,7 @@ public class Reversi : MonoBehaviour, IPointerClickHandler
     void PieceCreate(int row, int column, Colors nowColor)
     {
         _myTurn = !_myTurn;//置いたらターンを変える
-        GameObject piece = _pieces[row,column].transform.GetChild(3).gameObject;
+        GameObject piece = _pieces[row,column];
         if (nowColor == Colors.White)
         {
             _gameManager.WhiteCount++;
@@ -373,7 +383,7 @@ public class Reversi : MonoBehaviour, IPointerClickHandler
             {
                 for (int c = 0; c < _column; c++)
                 {
-                    GameObject piece = _pieces[r, c].transform.GetChild(3).gameObject;
+                    GameObject piece = _pieces[r, c];
                     if(cell[r, c].CellColor == Colors.Black)
                     {
                         _gameManager.BlackCount++;

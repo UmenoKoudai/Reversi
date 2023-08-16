@@ -4,6 +4,12 @@ using static IColors;
 
 class Cell : MonoBehaviour
 {
+    public Cell(Colors color, int blackCost, int whiteCost)
+    {
+        _state = color;
+        _blackCost = blackCost;
+        _whiteCost = whiteCost;
+    }
     [SerializeField] Text _blackCostText;
     [SerializeField] Text _whiteCostText;
     [SerializeField] GameObject _point;
