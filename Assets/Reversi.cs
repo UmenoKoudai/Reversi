@@ -402,6 +402,8 @@ public class Reversi : MonoBehaviour, IPointerClickHandler
                     }
                 }
             }
+            _cells = cell;
+            CostCheck();
         }
         else
         {
