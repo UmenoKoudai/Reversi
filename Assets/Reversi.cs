@@ -23,8 +23,7 @@ public class Reversi : MonoBehaviour, IPointerClickHandler
     [SerializeField] Skip _skip;
     /// <summary>盤面の情報を格納する配列</summary>
     Cell[,] _cells;
-    List<Cell[,]> _gameRecode = new List<Cell[,]>();
-    int _recodeIndex = 0;
+    Dictionary<string, Cell> _fieldData = new Dictionary<string, Cell>();
     /// <summary>フィールドの駒情報を格納する配列</summary>
     GameObject[,] _pieces;
     /// <summary>8方向を調べるための数字</summary>
@@ -61,11 +60,15 @@ public class Reversi : MonoBehaviour, IPointerClickHandler
         _pieces = new GameObject[_row, _column];
         for (int r = 0; r < _row; r++)
         {
+            char columnLine = 'A';
             for(int c = 0; c < _column; c++)
             {
+                char rowLine = '1';
+                string id = $"{columnLine}{rowLine}";
                 GameObject cell =  Instantiate(_cellPrefab, transform);
-                cell.name = $"{r} {c}";
-                _cells[r, c] = cell.GetComponent<Cell>();
+                cell.name = $"{columnLine}{rowLine}";
+                //_cells[r, c] = cell.GetComponent<Cell>();
+                _fieldData.Add(id, cell.GetComponent<Cell>());
                 GameObject piece = Instantiate(_piecePrefab, cell.transform);
                 piece.SetActive(false);
                 _pieces[r, c] = piece;
@@ -74,19 +77,21 @@ public class Reversi : MonoBehaviour, IPointerClickHandler
                     _gameManager.WhiteCount++;
                     piece.SetActive(true);
                     piece.transform.localRotation = Quaternion.Euler(90, 0, 0);
-                    _cells[r, c].CellColor = Colors.White;
+                    _fieldData[id].CellColor = Colors.White;
                 }
                 if(r == 3 && c == 4 || r == 4 && c == 3)
                 {
                     _gameManager.BlackCount++;
                     piece.SetActive(true);
                     piece.transform.localRotation = Quaternion.Euler(-90, 0, 0);
-                    _cells[r, c].CellColor = Colors.Black;
-                }            
+                    _fieldData[id].CellColor = Colors.Black;
+                }
+                rowLine++;
             }
+            columnLine++;
         }
         CostCheck();
-        RecodeSave();
+        //RecodeSave();
     }
 
     public void OnPointerClick(PointerEventData eventData)
@@ -103,7 +108,7 @@ public class Reversi : MonoBehaviour, IPointerClickHandler
                     StartCoroutine(Revers(ReversCheck(ref piece, Colors.Black, r, c, dir.x, dir.y), piece));
                 }
                 StartCoroutine(NextTurn());
-                RecodeSave();
+                //RecodeSave();
             }
         }
     }
@@ -129,17 +134,18 @@ public class Reversi : MonoBehaviour, IPointerClickHandler
     {
         List<KeyValuePair<int, int>> piece = new List<KeyValuePair<int, int>>();
         int max = int.MinValue;
-        int r = 0;
-        int c = 0;
+        string selectId;
         for(int i = 0; i < _row; i++)
         {
+            char columnLine = 'A';
             for(int n = 0; n < _column; n++)
             {
-                if (_cells[i,n].CellColor == Colors.None&& _cells[i, n].WhiteCost > max)
+                char rowLine = '1';
+                string id = $"{columnLine}{rowLine}";
+                if (_fieldData[id].CellColor == Colors.None&& _fieldData[id].WhiteCost > max)
                 {
-                    max = _cells[i, n].WhiteCost;
-                    r = i;
-                    c = n;
+                    max = _fieldData[id].WhiteCost;
+                    selectId = id;
                 }
             }
         }
@@ -157,19 +163,22 @@ public class Reversi : MonoBehaviour, IPointerClickHandler
             }
         }
         PlayerCheck();
-        RecodeSave();
+        //RecodeSave();
     }
     /// <summary>駒を置いた場合ひっくり返す事ができる枚数を計算</summary>
     void CostCheck()
     {
         for(int r = 0; r < _row; r++)
         {
+            char columnLine = 'A';
             for(int c = 0; c < _column; c++)
             {
+                char rowLine = '1';
                 if (_cells[r, c].CellColor == Colors.None)
                 {
-                    _cells[r, c].WhiteCost = 0;
-                    _cells[r, c].BlackCost = 0;
+                    string id = $"{columnLine}{rowLine}";
+                    _fieldData[id].WhiteCost = 0;
+                    _fieldData[id].BlackCost = 0;
                     foreach(Colors color in Enum.GetValues(typeof(Colors)))
                     {
                         if (color == Colors.None) continue;
@@ -183,20 +192,20 @@ public class Reversi : MonoBehaviour, IPointerClickHandler
         }
     }
 
-    void RecodeSave()
-    {
-        Cell[,] recode = new Cell[_row, _column];
-        for (int r = 0; r < _row; r++)
-        {
-            for (int c = 0; c < _column; c++)
-            {
-                Cell currentCell = _cells[r, c];
-                recode[r, c] = new Cell(currentCell.CellColor, currentCell.BlackCost, currentCell.WhiteCost);
-            }
-        }
-        _gameRecode.Add(recode);
-        _recodeIndex = _gameRecode.Count;
-    }
+    //void RecodeSave()
+    //{
+    //    Cell[,] recode = new Cell[_row, _column];
+    //    for (int r = 0; r < _row; r++)
+    //    {
+    //        for (int c = 0; c < _column; c++)
+    //        {
+    //            Cell currentCell = _cells[r, c];
+    //            recode[r, c] = new Cell(currentCell.CellColor, currentCell.BlackCost, currentCell.WhiteCost);
+    //        }
+    //    }
+    //    _gameRecode.Add(recode);
+    //    _recodeIndex = _gameRecode.Count;
+    //}
     /// <summary>実際に枚数を計算するメソッド</summary>
     /// <param name="row">計算するマス(縦)</param>
     /// <param name="column">計算するマス(横)</param>
@@ -275,14 +284,17 @@ public class Reversi : MonoBehaviour, IPointerClickHandler
     /// <param name="rowPlus">上下に移動</param>
     /// <param name="columnPlus">左右に移動</param>
     /// <returns></returns>
-    Colors ReversCheck(ref List<KeyValuePair<int, int>> pieces, Colors nowColor, int row, int column, int rowPlus, int columnPlus)
+    Colors ReversCheck(ref List<KeyValuePair<int, int>> pieces, Colors nowColor, char row, char column, int rowPlus, int columnPlus)
     {
         Colors changeColor = Colors.None;
         List<KeyValuePair<int, int>> currentReversPiece = new List<KeyValuePair<int, int>>();
-        row += rowPlus;
-        column += columnPlus;
+        int r = row;
+        row = (char)(r + rowPlus);
+        int c = column;
+        column = (char)(c + columnPlus);
         while (row >= 0 && column >= 0 && row < _row && column < _column)
         {
+            string id = $"{column}{row}";
             if (_cells[row, column].CellColor == Colors.None) 
             {
                 changeColor = Colors.None;
@@ -293,8 +305,10 @@ public class Reversi : MonoBehaviour, IPointerClickHandler
                 if (_cells[row, column].CellColor == Colors.Black)
                 {
                     currentReversPiece.Add(new KeyValuePair<int, int>(row, column));
-                    row += rowPlus;
-                    column += columnPlus;
+                    int r2 = row;
+                    row = (char)(r2 + rowPlus);
+                    int c2 = column;
+                    column = (char)(c2 + columnPlus);
                 }
                 else if (_cells[row, column].CellColor == Colors.White)
                 {
@@ -308,8 +322,10 @@ public class Reversi : MonoBehaviour, IPointerClickHandler
                 if (_cells[row, column].CellColor == Colors.White)
                 {
                     currentReversPiece.Add(new KeyValuePair<int, int>(row, column));
-                    row += rowPlus;
-                    column += columnPlus;
+                    int r2 = row;
+                    row = (char)(r2 + rowPlus);
+                    int c2 = column;
+                    column = (char)(c2 + columnPlus);
                 }
                 else if (_cells[row, column].CellColor == Colors.Black)
                 {
@@ -370,44 +386,44 @@ public class Reversi : MonoBehaviour, IPointerClickHandler
         row = 0; column = 0;
         return false;
     }
-    public void FieldChange(int n)
-    {
-        int tmp = _recodeIndex;
-        _recodeIndex += n;
-        if (_recodeIndex > 0 && _recodeIndex < _gameRecode.Count)
-        {
-            var cell = _gameRecode[_recodeIndex - 1];
-            _gameManager.WhiteCount = 0;
-            _gameManager.BlackCount = 0;
-            for (int r = 0; r < _row; r++)
-            {
-                for (int c = 0; c < _column; c++)
-                {
-                    GameObject piece = _pieces[r, c];
-                    if(cell[r, c].CellColor == Colors.Black)
-                    {
-                        _gameManager.BlackCount++;
-                        piece.SetActive(true);
-                        piece.transform.localRotation = Quaternion.Euler(-90, 0, 0);
-                    }
-                    else if (cell[r, c].CellColor == Colors.White)
-                    {
-                        _gameManager.WhiteCount++;
-                        piece.SetActive(true);
-                        piece.transform.localRotation = Quaternion.Euler(90, 0, 0);
-                    }
-                    else if (cell[r,c].CellColor == Colors.None)
-                    {
-                        piece.SetActive(false);
-                    }
-                }
-            }
-            _cells = cell;
-            CostCheck();
-        }
-        else
-        {
-            _recodeIndex = tmp;
-        }
-    }
+    //public void FieldChange(int n)
+    //{
+    //    int tmp = _recodeIndex;
+    //    _recodeIndex += n;
+    //    if (_recodeIndex > 0 && _recodeIndex < _gameRecode.Count)
+    //    {
+    //        var cell = _gameRecode[_recodeIndex - 1];
+    //        _gameManager.WhiteCount = 0;
+    //        _gameManager.BlackCount = 0;
+    //        for (int r = 0; r < _row; r++)
+    //        {
+    //            for (int c = 0; c < _column; c++)
+    //            {
+    //                GameObject piece = _pieces[r, c];
+    //                if(cell[r, c].CellColor == Colors.Black)
+    //                {
+    //                    _gameManager.BlackCount++;
+    //                    piece.SetActive(true);
+    //                    piece.transform.localRotation = Quaternion.Euler(-90, 0, 0);
+    //                }
+    //                else if (cell[r, c].CellColor == Colors.White)
+    //                {
+    //                    _gameManager.WhiteCount++;
+    //                    piece.SetActive(true);
+    //                    piece.transform.localRotation = Quaternion.Euler(90, 0, 0);
+    //                }
+    //                else if (cell[r,c].CellColor == Colors.None)
+    //                {
+    //                    piece.SetActive(false);
+    //                }
+    //            }
+    //        }
+    //        _cells = cell;
+    //        CostCheck();
+    //    }
+    //    else
+    //    {
+    //        _recodeIndex = tmp;
+    //    }
+    //}
 }
