@@ -6,10 +6,10 @@ using UnityEngine.UI;
 
 public class Recode : MonoBehaviour
 {
-    Text _recodeText;
+    InputField _recodeText;
     void Start()
     {
-        _recodeText = GetComponent<Text>();
+        _recodeText = GetComponent<InputField>();
     }
 
     public void AddText(string text)
