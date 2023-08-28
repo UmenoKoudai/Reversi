@@ -7,6 +7,7 @@ using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
 using static IColors;
+using static System.Runtime.CompilerServices.RuntimeHelpers;
 
 public class Reversi : MonoBehaviour, IPointerClickHandler
 {
@@ -26,6 +27,7 @@ public class Reversi : MonoBehaviour, IPointerClickHandler
     Dictionary<string, Cell> _fieldData = new Dictionary<string, Cell>();
     /// <summary>フィールドの駒情報を格納する配列</summary>
     Dictionary<string, GameObject> _pieceData = new Dictionary<string, GameObject>();
+    Recode _recode;
     /// <summary>8方向を調べるための数字</summary>
     Position[] direction = {
         new Position(1,0),
@@ -54,12 +56,13 @@ public class Reversi : MonoBehaviour, IPointerClickHandler
 
     void Start()
     {
+        _recode = FindObjectOfType<Recode>();
         //初期盤面を生成
         GetComponent<GridLayoutGroup>().constraintCount = _column;
-        char columnLine = 'A';
+        char rowLine = '1';
         for (int r = 0; r < _row; r++)
         {
-            char rowLine = '1';
+            char columnLine = 'A';
             for (int c = 0; c < _column; c++)
             {
                 
@@ -85,9 +88,9 @@ public class Reversi : MonoBehaviour, IPointerClickHandler
                     piece.transform.localRotation = Quaternion.Euler(-90, 0, 0);
                     _fieldData[id].CellColor = Colors.Black;
                 }
-                rowLine++;
+                columnLine++;
             }
-            columnLine++;
+            rowLine++;
         }
         CostCheck();
         //RecodeSave();
@@ -98,7 +101,7 @@ public class Reversi : MonoBehaviour, IPointerClickHandler
         Cell currentCell = eventData.pointerCurrentRaycast.gameObject.GetComponent<Cell>();
         if (CheckCell(currentCell, out char r, out char c) && _myTurn)
         {
-            List<KeyValuePair<int, int>> piece = new List<KeyValuePair<int, int>>();
+            List<KeyValuePair<char, char>> piece = new List<KeyValuePair<char, char>>();
             if (_fieldData[$"{c}{r}"].BlackCost > 0)
             {
                 PieceCreate($"{c}{r}", Colors.Black);
@@ -131,7 +134,7 @@ public class Reversi : MonoBehaviour, IPointerClickHandler
     /// <summary>AIのターンを行う</summary>
     void EnemyTurn()
     {
-        List<KeyValuePair<int, int>> piece = new List<KeyValuePair<int, int>>();
+        List<KeyValuePair<char, char>> piece = new List<KeyValuePair<char, char>>();
         int max = int.MinValue;
         string selectId = "";
         char r = '1';
@@ -195,7 +198,9 @@ public class Reversi : MonoBehaviour, IPointerClickHandler
                         }
                     }
                 }
+                rowLine++;
             }
+            columnLine++;
         }
     }
 
@@ -221,6 +226,7 @@ public class Reversi : MonoBehaviour, IPointerClickHandler
     /// <param name="searchColor">どの色の駒を計算するか</param>
     void CostCount(char row, char column, int rowPlus, int columnPlus, Colors searchColor)
     {
+        Debug.Log($"ID:{column}{row}");
         string currentId = $"{column}{row}";
         int currentRow = row;
         int currentColumn = column;
@@ -242,6 +248,7 @@ public class Reversi : MonoBehaviour, IPointerClickHandler
                     currentColumn = column;
                     row = (char)(currentRow + rowPlus);
                     column = (char)(currentColumn + columnPlus);
+                    id = $"{column}{row}";
                 }
                 else if (_fieldData[id].CellColor == Colors.Black)
                 {
@@ -258,6 +265,7 @@ public class Reversi : MonoBehaviour, IPointerClickHandler
                     currentColumn = column;
                     row = (char)(currentRow + rowPlus);
                     column = (char)(currentColumn + columnPlus);
+                    id = $"{column}{row}";
                 }
                 else if (_fieldData[id].CellColor == Colors.White)
                 {
@@ -289,6 +297,7 @@ public class Reversi : MonoBehaviour, IPointerClickHandler
         }
         _fieldData[id].CellColor = nowColor;
         _pieceData[id] = piece;
+        _recode.AddText(id);
     }
     /// <summary>上下左右斜めを見てリバース出来るかチェックする</summary>
     /// <param name="pieces">リバース出来る駒の位置</param>
@@ -298,17 +307,18 @@ public class Reversi : MonoBehaviour, IPointerClickHandler
     /// <param name="rowPlus">上下に移動</param>
     /// <param name="columnPlus">左右に移動</param>
     /// <returns></returns>
-    Colors ReversCheck(ref List<KeyValuePair<int, int>> pieces, Colors nowColor, char row, char column, int rowPlus, int columnPlus)
+    Colors ReversCheck(ref List<KeyValuePair<char, char>> pieces, Colors nowColor, char row, char column, int rowPlus, int columnPlus)
     {
         Colors changeColor = Colors.None;
-        List<KeyValuePair<int, int>> currentReversPiece = new List<KeyValuePair<int, int>>();
+        List<KeyValuePair<char, char>> currentReversPiece = new List<KeyValuePair<char, char>>();
         int r = row;
         row = (char)(r + rowPlus);
         int c = column;
         column = (char)(c + columnPlus);
-        while (row >= 0 && column >= 0 && row < _row && column < _column)
+        string id = $"{column}{row}";
+        while (_fieldData.Keys.Contains(id))
         {
-            string id = $"{column}{row}";
+            id = $"{column}{row}";
             if (_fieldData[id].CellColor == Colors.None)
             {
                 changeColor = Colors.None;
@@ -318,11 +328,12 @@ public class Reversi : MonoBehaviour, IPointerClickHandler
             {
                 if (_fieldData[id].CellColor == Colors.Black)
                 {
-                    currentReversPiece.Add(new KeyValuePair<int, int>(row, column));
+                    currentReversPiece.Add(new KeyValuePair<char, char>(row, column));
                     int r2 = row;
                     row = (char)(r2 + rowPlus);
                     int c2 = column;
                     column = (char)(c2 + columnPlus);
+                    id = $"{column}{row}";
                 }
                 else if (_fieldData[id].CellColor == Colors.White)
                 {
@@ -335,11 +346,12 @@ public class Reversi : MonoBehaviour, IPointerClickHandler
             {
                 if (_fieldData[id].CellColor == Colors.White)
                 {
-                    currentReversPiece.Add(new KeyValuePair<int, int>(row, column));
+                    currentReversPiece.Add(new KeyValuePair<char, char>(row, column));
                     int r2 = row;
                     row = (char)(r2 + rowPlus);
                     int c2 = column;
                     column = (char)(c2 + columnPlus);
+                    id = $"{column}{row}";
                 }
                 else if (_fieldData[id].CellColor == Colors.Black)
                 {
@@ -354,25 +366,26 @@ public class Reversi : MonoBehaviour, IPointerClickHandler
     /// <summary>挟まれた駒をリバースする</summary>
     /// <param name="reversColor">何色にリバースするか</param>
     /// <param name="pieces">リバースする駒の位置</param>
-    IEnumerator Revers(Colors reversColor, List<KeyValuePair<int, int>> pieces)
+    IEnumerator Revers(Colors reversColor, List<KeyValuePair<char, char>> pieces)
     {
         if (reversColor != Colors.None)
         {
             foreach (var p in pieces)
             {
-                string id = $"{p.Key}{p.Value}";
+                string id = $"{p.Value}{p.Key}";
                 _fieldData[id].CellColor = reversColor;
+                var piece = _pieceData[id];
                 if (reversColor == Colors.White)
                 {
                     _gameManager.BlackCount--;
                     _gameManager.WhiteCount++;
-                    _pieceData[id].transform.DORotate(new Vector3(1, 0, 0) * 90f, 1f);
+                    piece.transform.DORotate(new Vector3(1, 0, 0) * 90f, 1f);
                 }
                 else if (reversColor == Colors.Black)
                 {
                     _gameManager.WhiteCount--;
                     _gameManager.BlackCount++;
-                    _pieceData[id].transform.DORotate(new Vector3(1, 0, 0) * -90f, 1f);
+                    piece.transform.DORotate(new Vector3(1, 0, 0) * -90f, 1f);
                 }
                 yield return new WaitForSeconds(0.5f);
             }
@@ -400,7 +413,9 @@ public class Reversi : MonoBehaviour, IPointerClickHandler
                     column = columnLine;
                     return true;
                 }
+                rowLine++;
             }
+            columnLine++;
         }
         row = '0'; column = '0';
         return false;
