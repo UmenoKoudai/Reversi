@@ -7,9 +7,12 @@ using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
 using static IColors;
+using static IGameState;
 
 public class Reversi : MonoBehaviour, IPointerClickHandler
 {
+    [SerializeField] Text _timerText;
+    [SerializeField] float _timerValue;
     [SerializeField] InputField _inputField;
     /// <summary>セルのオブジェクト</summary>
     [SerializeField] GameObject _cellPrefab;
@@ -29,6 +32,7 @@ public class Reversi : MonoBehaviour, IPointerClickHandler
     Dictionary<string, GameObject> _pieceData = new Dictionary<string, GameObject>();
     Recode _recode;
     GameState _state = GameState.Game;
+    float timer;
     /// <summary>8方向を調べるための数字</summary>
     Position[] direction = {
         new Position(1,0),
@@ -54,15 +58,10 @@ public class Reversi : MonoBehaviour, IPointerClickHandler
             _myTurn = value;
         }
     }
-
-    enum GameState
-    {
-        Game,
-        Recode,
-    }
     void Start()
     {
-        //_recode = FindObjectOfType<Recode>();
+        timer = _timerValue;
+        _recode = FindObjectOfType<Recode>();
         //初期盤面を生成
         GetComponent<GridLayoutGroup>().constraintCount = _column;
         for (char r = '1'; r <= '8'; r++)
@@ -93,6 +92,20 @@ public class Reversi : MonoBehaviour, IPointerClickHandler
             }
         }
         CostCheck();
+    }
+
+    private void Update()
+    {
+        if (_state == GameState.Game)
+        {
+            timer -= Time.deltaTime;
+        }
+        _timerText.text = timer.ToString("f2");
+        if (timer < 0)
+        {
+            SkipCheck(Colors.None);
+        }
+
     }
     public void OnPointerClick(PointerEventData eventData)
     {
@@ -131,6 +144,7 @@ public class Reversi : MonoBehaviour, IPointerClickHandler
             }
         }
         _myTurn = !_myTurn;
+        timer = _timerValue;
         StartCoroutine(_skip.Play());
         return true;
     }
@@ -259,6 +273,7 @@ public class Reversi : MonoBehaviour, IPointerClickHandler
         List<KeyValuePair<char, char>> pieces = new List<KeyValuePair<char, char>>();
         if (_state == GameState.Game)
         {
+            timer = _timerValue;
             _myTurn = !_myTurn;//置いたらターンを変える
         }
         GameObject piece = _pieceData[id];

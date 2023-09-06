@@ -30,24 +30,29 @@ public class GameManager : MonoBehaviour
         }
         if(_blackCount + _whiteCount == _reversi.Row * _reversi.Column)
         {
-            _winnerObject.SetActive(true);
-            Text winner = _winnerObject.transform.GetChild(0).GetComponent<Text>();
-            if(_blackCount > _whiteCount)
-            {
-                winner.color = Color.black;
-                winner.text = "Black";
-            }
-            else if(_whiteCount > _blackCount)
-            {
-                winner.color = Color.white;
-                winner.text = "White";
-            }
-            else
-            {
-                winner.color = Color.blue;
-                _winnerObject.transform.GetChild(1).gameObject.SetActive(false);
-                winner.text = "Draw";
-            }
+            GameEnd();
+        }
+    }
+
+    public void GameEnd()
+    {
+        _winnerObject.SetActive(true);
+        Text winner = _winnerObject.transform.GetChild(0).GetComponent<Text>();
+        if (_blackCount > _whiteCount)
+        {
+            winner.color = Color.black;
+            winner.text = "Black";
+        }
+        else if (_whiteCount > _blackCount)
+        {
+            winner.color = Color.white;
+            winner.text = "White";
+        }
+        else
+        {
+            winner.color = Color.blue;
+            _winnerObject.transform.GetChild(1).gameObject.SetActive(false);
+            winner.text = "Draw";
         }
     }
 }
