@@ -36,6 +36,7 @@ public class GameManager : MonoBehaviour
 
     public void GameEnd()
     {
+        _reversi.State = IGameState.GameState.End;
         _winnerObject.SetActive(true);
         Text winner = _winnerObject.transform.GetChild(0).GetComponent<Text>();
         if (_blackCount > _whiteCount)

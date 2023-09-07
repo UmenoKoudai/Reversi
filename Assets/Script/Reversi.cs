@@ -6,6 +6,7 @@ using System.Linq;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
+using UniRx;
 using static IColors;
 using static IGameState;
 
@@ -45,12 +46,14 @@ public class Reversi : MonoBehaviour, IPointerClickHandler
         new Position(-1,1),
     };
     /// <summary>現在のターン情報を管理するフラグ</summary>
-    public bool _myTurn = true;
+    //public bool _myTurn = true;
+    ReactiveProperty<bool> _myTurn = new ReactiveProperty<bool>(true);
 
 
-    public int Row { get { return _row; } }
-    public int Column { get { return _column; } }
-    public bool Turn
+    public int Row => _row;
+    public int Column => _column;
+    public GameState State { get => _state; set => _state = value; }
+    public ReactiveProperty<bool> Turn
     {
         get => _myTurn;
         set
@@ -62,6 +65,7 @@ public class Reversi : MonoBehaviour, IPointerClickHandler
     {
         timer = _timerValue;
         _recode = FindObjectOfType<Recode>();
+        this.ObserveEveryValueChanged(x => x._myTurn.Value).Subscribe(x => { if(!x) StartCoroutine(NextTurn()); });
         //初期盤面を生成
         GetComponent<GridLayoutGroup>().constraintCount = _column;
         for (char r = '1'; r <= '8'; r++)
@@ -106,11 +110,12 @@ public class Reversi : MonoBehaviour, IPointerClickHandler
             SkipCheck(Colors.None);
         }
 
+
     }
     public void OnPointerClick(PointerEventData eventData)
     {
         Cell currentCell = eventData.pointerCurrentRaycast.gameObject.GetComponent<Cell>();
-        if (CheckCell(currentCell, out char r, out char c) && _myTurn)
+        if (CheckCell(currentCell, out char r, out char c) && _myTurn.Value)
         {
             if (SkipCheck(Colors.Black))
             {
@@ -119,7 +124,7 @@ public class Reversi : MonoBehaviour, IPointerClickHandler
             if (_fieldData[$"{c}{r}"].BlackCost > 0)
             {
                 PieceCreate($"{c}{r}", Colors.Black);
-                StartCoroutine(NextTurn());
+                //StartCoroutine(NextTurn());
             }
         }
     }
@@ -143,7 +148,7 @@ public class Reversi : MonoBehaviour, IPointerClickHandler
                 }
             }
         }
-        _myTurn = !_myTurn;
+        //_myTurn.Value = !_myTurn.Value;
         timer = _timerValue;
         StartCoroutine(_skip.Play());
         return true;
@@ -274,7 +279,7 @@ public class Reversi : MonoBehaviour, IPointerClickHandler
         if (_state == GameState.Game)
         {
             timer = _timerValue;
-            _myTurn = !_myTurn;//置いたらターンを変える
+            _myTurn.Value = !_myTurn.Value;//置いたらターンを変える
         }
         GameObject piece = _pieceData[id];
         if (nowColor == Colors.White)
